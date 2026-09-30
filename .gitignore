@@ -54,3 +54,10 @@ compile_commands.json
 *creator.user*
 
 *_qmlcache.qrc
+
+# QtCreator CMake presets / local project settings
+.qtcreator/
+cmake-build-*/
+
+# macOS
+.DS_Store
