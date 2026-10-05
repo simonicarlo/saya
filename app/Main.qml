@@ -15,6 +15,13 @@ Window {
     // 0 = empty, 1 = scanning, 2 = results. CarveController will own this.
     property int appState: 0
 
+    // Set from main.cpp when SAYA_SHOT is used, so a capture can choose a
+    // state and a theme. -1 means "not set", so ordinary runs are untouched.
+    property int devState: -1
+    property int devTheme: -1
+    onDevStateChanged: if (devState >= 0) appState = devState
+    onDevThemeChanged: if (devTheme >= 0) Theme.appearance = devTheme
+
     // Screen is an attached property, so it cannot be read from inside the
     // Theme singleton. One physical pixel, resolved once here.
     Component.onCompleted: Theme.hair = 1 / Screen.devicePixelRatio
