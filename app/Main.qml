@@ -1,90 +1,85 @@
 import QtQuick
-import QtQuick.Layouts
-import QtQuick.Controls.Basic
+import saya
 
-
-ApplicationWindow {
+Window {
     id: window
-    width: 640
-    height: 480
-    minimumWidth: 200
-    minimumHeight: 250
+
+    width: 1060
+    height: 720
+    minimumWidth: 820
+    minimumHeight: 560
     visible: true
-    title: qsTr("Hello World")
-    property bool lightMode: Application.styleHints.colorScheme === Qt.Light
-    property color reallyDark: "#1f1f1f"
-    property color dark: "#262626"
-    property color reallyLight: "#e7e7e7"
-    property color light: "#e0e0e0"
+    title: "Saya"
+    color: Theme.ground
 
-    GridLayout {
-        id: grid
-        columns: width < 400 ? 1 : 2
-        rowSpacing: 0
-        columnSpacing: 0
-        anchors.fill: parent
+    // 0 = empty, 1 = scanning, 2 = results. CarveController will own this.
+    property int appState: 0
 
-        Rectangle {
-            id: rectangle1
-            color: window.lightMode ? window.reallyLight : window.reallyDark
-            Layout.fillHeight: true
-            Layout.fillWidth: true
+    // Screen is an attached property, so it cannot be read from inside the
+    // Theme singleton. One physical pixel, resolved once here.
+    Component.onCompleted: Theme.hair = 1 / Screen.devicePixelRatio
 
-            ColumnLayout {
-                anchors.fill: parent
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
+    TopBar {
+        id: topBar
+        anchors { top: parent.top; left: parent.left; right: parent.right }
+        imageName: window.appState === 0 ? "" : MockData.imageName
+        imageBytes: MockData.imageBytes
 
-                Label {
-                    id: text1
-                    color: window.lightMode ? window.dark : window.light
-                    font.pixelSize: 120
-                    fontSizeMode: Text.Fit
-                    text: qsTr("Hello World")
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.margins: 16
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-            }
-        }
-
-        Rectangle {
-            id: rectangle2
-            color: window.lightMode ? window.light : window.dark
-            Layout.fillHeight: true
-            Layout.fillWidth: true
-
-            ColumnLayout {
-                anchors.fill: parent
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
-
-                Button {
-                    id: button1
-                    text: window.lightMode ? qsTr("\u263D  Dark mode")
-                                           : qsTr("\u263C  Light mode")
-                    Layout.bottomMargin: 16
-                    Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
-
-                    contentItem: Text {
-                        text: button1.text
-                        color: window.lightMode ? window.light : window.dark
-                        font: button1.font
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-
-                    background: Rectangle {
-                        implicitWidth: 120
-                        implicitHeight: 36
-                        radius: 8
-                        color: window.lightMode ? window.dark : window.light
-                    }
-
-                    onClicked: window.lightMode = !window.lightMode
-                }
-            }
+        FilledButton {
+            text: "Export 22 files"
+            visible: window.appState === 2
+            onClicked: {}
         }
     }
 
+    Rectangle {
+        id: topRule
+        anchors { top: topBar.bottom; left: parent.left; right: parent.right }
+        height: Theme.hair
+        color: Theme.hairline
+    }
+
+    Item {
+        id: content
+        anchors { top: topRule.bottom; left: parent.left
+                  right: parent.right; bottom: bottomRule.top }
+
+        // Motion here says "the view changed", and nothing else.
+        EmptyView {
+            anchors.fill: parent
+            opacity: window.appState === 0 ? 1 : 0
+            visible: opacity > 0
+            onChooseRequested: window.appState = 1
+            Behavior on opacity { NumberAnimation { duration: 160 } }
+        }
+
+        ScanView {
+            anchors.fill: parent
+            opacity: window.appState === 1 ? 1 : 0
+            visible: opacity > 0
+            onStopRequested: window.appState = 2
+            Behavior on opacity { NumberAnimation { duration: 160 } }
+        }
+
+        ResultsView {
+            anchors.fill: parent
+            opacity: window.appState === 2 ? 1 : 0
+            visible: opacity > 0
+            Behavior on opacity { NumberAnimation { duration: 160 } }
+        }
+    }
+
+    Rectangle {
+        id: bottomRule
+        anchors { left: parent.left; right: parent.right; bottom: devStrip.top }
+        height: Theme.hair
+        color: Theme.hairline
+    }
+
+    DevStrip {
+        id: devStrip
+        anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+        appState: window.appState
+        onStateRequested: (index) => window.appState = index
+    }
 }
