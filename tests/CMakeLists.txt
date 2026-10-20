@@ -10,6 +10,7 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(engine_tests
     test_carver.cpp
+    test_byte_source.cpp
 )
 
 target_link_libraries(engine_tests
