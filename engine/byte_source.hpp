@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <span>
 #include <vector>
+#include <filesystem>
+#include <fstream>
 
 namespace saya {
 
@@ -28,6 +30,20 @@ namespace saya {
 
     private:
         std::vector<std::byte> data_;
+    };
+
+    class FileByteSource final : public ByteSource {
+    public:
+        explicit FileByteSource(const std::filesystem::path& path);
+
+        [[nodiscard]] std::uint64_t size() const override;
+        [[nodiscard]] std::size_t read(std::uint64_t offset, std::span<std::byte> out) const override;
+
+    private:
+        // read() moves this stream's position, so FileByteSource is not safe
+        // to use from several threads at once.
+        mutable std::ifstream file_;
+        std::uint64_t size_;
     };
 
 } // namespace saya
